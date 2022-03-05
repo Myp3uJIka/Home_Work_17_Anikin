@@ -99,23 +99,24 @@ class MoviesView(Resource):
         dir_id = request.args.get('director_id')
         genre_id = request.args.get('genre_id')
 
+        find = False
+
         if dir_id or genre_id:
             for movie in movies:
                 if dir_id and genre_id:
                     if dir_id == str(movie['director_id']) and genre_id == str(movie['genre_id']):
+                        find = True
                         return movie, 200
-                    else:
-                        return '', 404
                 elif dir_id:
                     if dir_id == str(movie['director_id']):
+                        find = True
                         return movie, 200
-                    else:
-                        return '', 404
                 elif genre_id:
                     if genre_id == str(movie['genre_id']):
+                        find = True
                         return movie, 200
-                    else:
-                        return '', 404
+                # if not find:
+                #     return '', 404
 
         return movies, 200
 
@@ -161,6 +162,35 @@ class DirectorView(Resource):
     def delete(self, did):
         director = Director.query.get(did)
         db.session.delete(director)
+        db.session.commit()
+        db.session.close()
+        return '', 204
+
+
+@genre_ns.route('/')
+class GenresView(Resource):
+    def post(self):
+        req_json = request.json
+        new_genre = Genre(**req_json)
+        with db.session.begin():
+            db.session.add(new_genre)
+        return '', 201
+
+
+@genre_ns.route('/<int:gid>')
+class GenreView(Resource):
+    def put(self, gid):
+        req_json = request.json
+        genre = Genre.query.get(gid)
+        genre.name = req_json["name"]
+        db.session.add(genre)
+        db.session.commit()
+        db.session.close()
+        return '', 201
+
+    def delete(self, gid):
+        genre = Genre.query.get(gid)
+        db.session.delete(genre)
         db.session.commit()
         db.session.close()
         return '', 204
