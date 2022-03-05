@@ -69,7 +69,7 @@ class MoviesView(Resource):
             - http://127.0.0.1:5000/movies/?director_id=2&genre_id=4 - выводит список фильмов с указанными режиссёром и
                 жанром
         """
-        #TODO Вопрос: обязательно ли использовать сериализацию для обработки запроса? Мне не удалось найти способ
+        # TODO Вопрос: обязательно ли использовать сериализацию для обработки запроса? Мне не удалось найти способ
         # вывести данные в строгом порядке (id, title, description.....) порядок постоянно меняется. Единственное
         # решение к которому я пришёл, это - формирование списка с помощью создания словаря (пример закомментирован),
         # но для этого нет необходимости использовать сериализацию.
@@ -131,14 +131,14 @@ class MoviesView(Resource):
                     if genre_id == str(movie['genre_id']):
                         result.append(movie)
             if len(result) == 0:
-                return f'director_if - {dir_id}, and genre_id - {genre_id} not found', 404
+                return 'Not found', 404
             return result, 200
 
         return movies, 200
 
 
 @movie_ns.route('/<int:mid>')
-class MoviesView(Resource):
+class MovieView(Resource):
     def get(self, mid):
         """
         Обработка GET-запроса на адрес http://127.0.0.1:5000/movies/1 - выводит данные о фильме с указанным id.
@@ -154,6 +154,8 @@ class MoviesView(Resource):
         #     'genre_id': movie['genre_id'],
         #     'director_id': movie['director_id']
         # }
+        if movie == {}:
+            return "Not found", 404
         return movie, 200
 
 
@@ -179,10 +181,13 @@ class DirectorView(Resource):
         """
         req_json = request.json
         director = Director.query.get(did)
+        if director is None:
+            return "Not found", 404
         director.name = req_json["name"]
         db.session.add(director)
         db.session.commit()
         db.session.close()
+        print(director)
         return '', 201
 
     def delete(self, did):
@@ -191,6 +196,8 @@ class DirectorView(Resource):
         в таблице director.
         """
         director = Director.query.get(did)
+        if director is None:
+            return "Not found", 404
         db.session.delete(director)
         db.session.commit()
         db.session.close()
@@ -219,6 +226,8 @@ class GenreView(Resource):
         """
         req_json = request.json
         genre = Genre.query.get(gid)
+        if genre is None:
+            return "Not found", 404
         genre.name = req_json["name"]
         db.session.add(genre)
         db.session.commit()
@@ -231,6 +240,8 @@ class GenreView(Resource):
         в таблице genre.
         """
         genre = Genre.query.get(gid)
+        if genre is None:
+            return "Not found", 404
         db.session.delete(genre)
         db.session.commit()
         db.session.close()
