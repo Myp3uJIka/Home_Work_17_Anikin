@@ -59,12 +59,13 @@ movies_schema = MovieSchema(many=True)
 
 api = Api(app)
 movie_ns = api.namespace('movies')
+director_ns = api.namespace('directors')
+genre_ns = api.namespace('genres')
 
 
 @movie_ns.route('/')
 class MoviesView(Resource):
     def get(self):
-        # # # # # # # # # # # #
         # movies = Movie.query.all()
         # result = []
         # for movie in movies:
@@ -80,7 +81,6 @@ class MoviesView(Resource):
         #         }
         #     result.append(dict)
         # return result, 200
-        # # # # # # # # # # # #
         movies = movies_schema.dump(Movie.query.all())
         # result = []
         # for movie in movies:
@@ -137,7 +137,34 @@ class MoviesView(Resource):
         return movie, 200
 
 
+@director_ns.route('/')
+class DirectorsView(Resource):
+    def post(self):
+        req_json = request.json
+        new_director = Director(**req_json)
+        with db.session.begin():
+            db.session.add(new_director)
+        return '', 201
+
+
+@director_ns.route('/<int:did>')
+class DirectorView(Resource):
+    def put(self, did):
+        req_json = request.json
+        director = Director.query.get(did)
+        director.name = req_json["name"]
+        db.session.add(director)
+        db.session.commit()
+        db.session.close()
+        return '', 201
+
+    def delete(self, did):
+        director = Director.query.get(did)
+        db.session.delete(director)
+        db.session.commit()
+        db.session.close()
+        return '', 204
+
+
 if __name__ == '__main__':
-    # client = app.test_client()
-    # response = client.get('/movies/')
     app.run(debug=True)
